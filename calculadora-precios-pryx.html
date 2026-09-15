@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculadora de precios — PRYX</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Manrope:wght@400;500;600;700&display=swap');
+
+  :root{
+    --ink:#1c1b18;
+    --panel:#242320;
+    --panel-2:#2c2b27;
+    --orange:#FE7226;
+    --cream:#F3EFE7;
+    --muted:#9c9890;
+    --line:#3a3833;
+  }
+
+  *{box-sizing:border-box;}
+
+  body{
+    margin:0;
+    min-height:100vh;
+    background:var(--ink);
+    font-family:'Manrope', sans-serif;
+    color:var(--cream);
+    display:flex;
+    justify-content:center;
+    padding:32px 18px 60px;
+  }
+
+  .wrap{ width:100%; max-width:420px; }
+
+  .kicker{ font-size:13px; color:var(--muted); margin:0 0 6px; }
+
+  h1{
+    font-family:'Syne', sans-serif;
+    font-weight:800;
+    font-size:28px;
+    line-height:1.1;
+    margin:0 0 22px;
+    letter-spacing:-0.01em;
+  }
+
+  h1 span{ color:var(--orange); }
+
+  .tabs{
+    display:flex;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:4px;
+    margin-bottom:26px;
+  }
+
+  .tab{
+    flex:1;
+    text-align:center;
+    padding:10px 6px;
+    font-size:13px;
+    font-weight:700;
+    border-radius:7px;
+    cursor:pointer;
+    color:var(--muted);
+    transition:background .15s ease, color .15s ease;
+    user-select:none;
+  }
+
+  .tab.active{
+    background:var(--orange);
+    color:var(--ink);
+  }
+
+  .field{ margin-bottom:20px; }
+
+  label{
+    display:block;
+    font-size:14px;
+    font-weight:600;
+    margin-bottom:8px;
+  }
+
+  .input-row{
+    display:flex;
+    align-items:center;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:0 14px;
+    transition:border-color .15s ease;
+  }
+
+  .input-row:focus-within{ border-color:var(--orange); }
+
+  .input-row .prefix, .input-row .suffix{
+    color:var(--muted);
+    font-size:15px;
+    font-weight:600;
+  }
+
+  input[type="number"]{
+    flex:1;
+    background:transparent;
+    border:none;
+    outline:none;
+    color:var(--cream);
+    font-family:'Manrope', sans-serif;
+    font-size:17px;
+    font-weight:600;
+    padding:14px 8px;
+    width:100%;
+    -moz-appearance:textfield;
+  }
+
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button{
+    -webkit-appearance:none;
+    margin:0;
+  }
+
+  .slider-row{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin-top:10px;
+  }
+
+  input[type="range"]{
+    flex:1;
+    -webkit-appearance:none;
+    height:4px;
+    border-radius:2px;
+    background:var(--line);
+    outline:none;
+  }
+
+  input[type="range"]::-webkit-slider-thumb{
+    -webkit-appearance:none;
+    width:18px;
+    height:18px;
+    border-radius:50%;
+    background:var(--orange);
+    cursor:pointer;
+    border:3px solid var(--ink);
+    box-shadow:0 0 0 1px var(--orange);
+  }
+
+  .slider-value{
+    font-family:'Syne', sans-serif;
+    font-weight:700;
+    color:var(--orange);
+    min-width:52px;
+    text-align:right;
+    font-size:16px;
+  }
+
+  .hint{
+    font-size:12px;
+    color:var(--muted);
+    margin:6px 2px 0;
+  }
+
+  .result{
+    margin-top:8px;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:24px 22px;
+  }
+
+  .result-label{ font-size:13px; color:var(--muted); margin:0 0 4px; }
+
+  .result-value{
+    font-family:'Syne', sans-serif;
+    font-weight:800;
+    font-size:38px;
+    color:var(--cream);
+    margin:0;
+    letter-spacing:-0.02em;
+  }
+
+  .breakdown{
+    margin-top:18px;
+    padding-top:16px;
+    border-top:1px solid var(--line);
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+  }
+
+  .breakdown div{ flex:1; }
+  .breakdown div:last-child{ text-align:right; }
+
+  .breakdown .label{ font-size:13px; color:var(--muted); margin-bottom:3px; }
+  .breakdown .value{ font-size:14px; font-weight:700; }
+  .breakdown .value.profit{ color:var(--orange); }
+
+  footer{
+    margin-top:28px;
+    text-align:center;
+    font-size:12px;
+    color:var(--muted);
+  }
+
+  footer strong{ color:var(--cream); }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <p class="kicker">Consultoría para PyMEs</p>
+    <h1>¿A cuánto <span>vendo?</span></h1>
+
+    <div class="tabs">
+      <div class="tab active" id="tabCost" onclick="setMode('cost')">Sé el costo</div>
+      <div class="tab" id="tabPrice" onclick="setMode('price')">Sé el precio de venta</div>
+    </div>
+
+    <div id="panelCost">
+      <div class="field">
+        <label for="cost">Costo del producto o servicio</label>
+        <div class="input-row">
+          <span class="prefix">$</span>
+          <input type="number" id="cost" inputmode="decimal" value="1000">
+        </div>
+      </div>
+    </div>
+
+    <div id="panelPrice" style="display:none;">
+      <div class="field">
+        <label for="price">Precio de venta</label>
+        <div class="input-row">
+          <span class="prefix">$</span>
+          <input type="number" id="price" inputmode="decimal" value="2000">
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="margin">Margen de ganancia deseado</label>
+      <div class="slider-row">
+        <input type="range" id="margin" min="0" max="200" value="40">
+        <span class="slider-value" id="marginValue">40%</span>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="commission">Comisión (marketplace, plataforma de pago, etc.)</label>
+      <div class="slider-row">
+        <input type="range" id="commission" min="0" max="40" value="0">
+        <span class="slider-value" id="commissionValue">0%</span>
+      </div>
+      <p class="hint">Se calcula sobre el precio de venta final</p>
+    </div>
+
+    <div class="result">
+      <p class="result-label" id="resultLabel">Precio de venta sugerido</p>
+      <p class="result-value" id="resultValue">$0</p>
+
+      <div class="breakdown">
+        <div>
+          <p class="label">Comisión</p>
+          <p class="value" id="breakdownCommission">$0</p>
+        </div>
+        <div>
+          <p class="label">Ganancia neta</p>
+          <p class="value profit" id="breakdownProfit">$0</p>
+        </div>
+      </div>
+    </div>
+
+    <footer>Hecho por <strong>PRYX Consulting</strong></footer>
+  </div>
+
+<script>
+  let mode = 'cost';
+
+  const tabCost = document.getElementById('tabCost');
+  const tabPrice = document.getElementById('tabPrice');
+  const panelCost = document.getElementById('panelCost');
+  const panelPrice = document.getElementById('panelPrice');
+
+  const costInput = document.getElementById('cost');
+  const priceInput = document.getElementById('price');
+  const marginInput = document.getElementById('margin');
+  const commissionInput = document.getElementById('commission');
+
+  const marginValue = document.getElementById('marginValue');
+  const commissionValue = document.getElementById('commissionValue');
+  const resultLabel = document.getElementById('resultLabel');
+  const resultValue = document.getElementById('resultValue');
+  const breakdownCommission = document.getElementById('breakdownCommission');
+  const breakdownProfit = document.getElementById('breakdownProfit');
+
+  function formatMoney(n){
+    return '$' + Math.round(n).toLocaleString('es-AR');
+  }
+
+  function setMode(newMode){
+    mode = newMode;
+    if(mode === 'cost'){
+      tabCost.classList.add('active');
+      tabPrice.classList.remove('active');
+      panelCost.style.display = 'block';
+      panelPrice.style.display = 'none';
+      resultLabel.textContent = 'Precio de venta sugerido';
+    } else {
+      tabCost.classList.remove('active');
+      tabPrice.classList.add('active');
+      panelCost.style.display = 'none';
+      panelPrice.style.display = 'block';
+      resultLabel.textContent = 'Costo máximo permitido';
+    }
+    calculate();
+  }
+
+  function calculate(){
+    const margin = parseFloat(marginInput.value) || 0;
+    const commission = parseFloat(commissionInput.value) || 0;
+
+    marginValue.textContent = margin + '%';
+    commissionValue.textContent = commission + '%';
+
+    if(mode === 'cost'){
+      const cost = parseFloat(costInput.value) || 0;
+      const profit = cost * (margin / 100);
+      const beforeCommission = cost + profit;
+      const finalPrice = commission < 100 ? beforeCommission / (1 - commission / 100) : beforeCommission;
+      const commissionAmount = finalPrice - beforeCommission;
+
+      resultValue.textContent = formatMoney(finalPrice);
+      breakdownCommission.textContent = formatMoney(commissionAmount);
+      breakdownProfit.textContent = formatMoney(profit);
+    } else {
+      const price = parseFloat(priceInput.value) || 0;
+      const commissionAmount = price * (commission / 100);
+      const netIncome = price - commissionAmount;
+      const maxCost = netIncome / (1 + margin / 100);
+      const profit = netIncome - maxCost;
+
+      resultValue.textContent = formatMoney(maxCost);
+      breakdownCommission.textContent = formatMoney(commissionAmount);
+      breakdownProfit.textContent = formatMoney(profit);
+    }
+  }
+
+  costInput.addEventListener('input', calculate);
+  priceInput.addEventListener('input', calculate);
+  marginInput.addEventListener('input', calculate);
+  commissionInput.addEventListener('input', calculate);
+
+  calculate();
+</script>
+</body>
+</html>
